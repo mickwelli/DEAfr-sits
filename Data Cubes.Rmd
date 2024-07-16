@@ -16,7 +16,7 @@ The SITS package implements a concept of data cubes to store and deal with data 
 In the last script, we loaded Digital Earth Africa Sentinel-2 data using the `sits_cube()` function which returned a data cube, stored locally in our R environment. This script will further explore data cubes objects and conducting operations on them.
 
 To begin, packages are loaded.
-```{r packages, include=TRUE}
+```{r packages, include=TRUE, warning=FALSE, message=FALSE}
 library(sf)
 library(terra)
 library(sits)
@@ -60,7 +60,8 @@ plot(dea_s2_cube %>% filter(tile=='36MZD'), red = "B04", blue = "B02", green = "
 ```{r plottile2, echo=TRUE}
 plot(dea_s2_cube %>% filter(tile=='37MBU'), red = "B04", blue = "B02", green = "B08")
 ```
-We can see that tile `37MBU` covers the entire extent, so we will use that tile.
+
+We can see that tile `37MBU` covers the entire extent, so we will use that tile. It is selected in the line of code below.
 
 ```{r timeline, echo=TRUE}
 dea_s2_cube <- dea_s2_cube %>% filter(tile=='37MBU')
