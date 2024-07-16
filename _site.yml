@@ -1,0 +1,8 @@
+name: "my-website"
+navbar:
+  title: "Digital Earth Africa and R SITS"
+  left:
+    - text: "Loading Data"
+      href: Loading.html
+    - text: "Data Cubes"
+      href: Data-Cubes.html

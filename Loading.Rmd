@@ -1,0 +1,106 @@
+---
+title: "Loading Digital Earth Africa data"
+author: "Michael Wellington"
+date: "2024-06-07"
+output: html_document
+---
+
+## Introduction
+
+The team behind the R packages `rstac` and `sits` (Satellite Image Time Series Analysis on Earth Observation Data Cubes) have expertly made Digital Earth Africa available through R. This means the many operations available through the `sits` package can be applied to Digital Earth Africa data. It also means that R users can easily access Digital Earth Africa data for their own purposes.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+
+The installation functions have been commented out (#). Remove the # to install the listed packages if not already installed. The `library()` command then loads packages.
+
+```{r load, include=TRUE}
+#install.packages("sf")
+#install.packages("terra")
+#install.packages("sits", dependencies = TRUE)
+
+library(sf)
+library(terra)
+library(sits)
+library(rstac)
+```
+
+## Load Sentinel-2 data with SITS
+
+The following code loads Sentinel-2 images for a defined period and area in Madagascar. Note the definition of source, collection, band names, dates, and coordinates in the loading function. The returned object is a `sits cube' which can be queried and plotted, as below.
+
+```{r s2cube, echo=TRUE}
+dea_s2_cube <- sits_cube(
+  source = "DEAFRICA",
+  collection = "SENTINEL-2-L2A",
+  roi = c(
+    lon_min = 46.1, lat_min = -15.6,
+    lon_max = 46.6, lat_max = -16.1
+  ),
+  bands = c(
+    "B02", "B03", "B04",
+    "B05", "B06", "B07",
+    "B08", "B8A", "B11",
+    "B12", "CLOUD"
+  ),
+  start_date = "2019-04-01",
+  end_date = "2019-11-30"
+)
+plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
+```
+## Loading with rstac
+
+We can also load Digital Earth Africa directly through STAC metadata using the rstac package. Note the naming conventions used for collections, dates, and stac endpoints. Some guidance on this is available on the [Digital Earth Africa documentation](https://docs.digitalearthafrica.org/en/latest/sandbox/notebooks/Frequently_used_code/Downloading_data_with_STAC.html) and some [stacspec documentation](https://stacspec.org/en/tutorials/1-download-data-using-r/).
+
+```{r rstacload}
+s_obj <- stac("https://explorer.digitalearth.africa/stac")
+
+bbox <- c(46.1, -15.6, 46.6, -16.1)
+
+url <- stac("https://explorer.digitalearth.africa/stac") %>%
+  stac_search(collections = "s2_l2a",
+              bbox = bbox, datetime = "2019-04-03/2019-04-05", limit=40) %>%
+  get_request() %>% assets_select(asset_names=
+  c("B02", "B04",
+    "B08")) %>%
+  assets_url() 
+
+```
+
+## Plot data loaded using stac
+
+Below, the `rast` function from the `terra` package is used to bring the data into memory as a `SpatRaster` object. When plotted, we can see the same Sentinel-2 image we loaded using SITS. 
+
+```{r list, echo=TRUE}
+stack <- rast(url)
+plotRGB(stack, r= "B04", b = "B02", g = "B08", scale=10000, stretch= 'hist')
+```
+
+## View available collections
+We can view the available data collections from Digital Earth Africa using the `sits_list_collections()` function as below. Note the bands listed, the names of which can be used to access the data. In some cases, such as for surface reflectance, we may need more information about the bands to load. In these cases we can refer to the [DE Africa Explorer](https://explorer.digitalearth.africa/). For example, we can see that `B05` corresponds to the NIR band for Landsat-8 by checking product specifications in the Explorer.
+
+```{r collections, echo=TRUE}
+sits_list_collections(source = 'DEAFRICA')
+```
+
+
+
+```{r ls8cube, echo=TRUE}
+dea_ls8_cube <- sits_cube(
+  source = "DEAFRICA",
+  collection = "LS8-SR",
+  roi = c(
+    lon_min = 46.1, lat_min = -15.6,
+    lon_max = 46.6, lat_max = -16.1
+  ),
+  bands = c(
+    "B04", "B02", "B05"
+  ),
+  start_date = "2019-04-01",
+  end_date = "2019-11-30"
+)
+plot(dea_ls8_cube, red = "B04", blue = "B02", green = "B05")
+```

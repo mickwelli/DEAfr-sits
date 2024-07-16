@@ -1,0 +1,5 @@
+---
+title: "Digital Earth Africa and R SITS"
+---
+
+Demo of using DE Africa data in R SITS.

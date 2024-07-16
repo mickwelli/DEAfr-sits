@@ -1,0 +1,9 @@
+---
+title: "Digital Earth Africa and R SITS"
+---
+
+These markdown scripts provide a demonstration of how Digital Earth Africa can be accessed and analysed through the R SITS package. 
+
+The scripts show how data can be loaded, handled, visualised, and classified into different land cover classes.
+
+More information on SITS can be found at the [online sitsbook](https://e-sensing.github.io/sitsbook/). Thanks and credit to the team at Brazil Data Cube for developing this package.
