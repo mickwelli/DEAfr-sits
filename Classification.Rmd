@@ -1,0 +1,60 @@
+---
+title: "Classification with geomedian"
+author: "Michael Wellington"
+date: "2024-07-16"
+output: html_document
+---
+
+# Load packages
+
+```{r load, include=TRUE, warning=FALSE}
+library(sf)
+library(terra)
+library(sits)
+library(rstac)
+```
+
+# Load geomedian
+
+This script loads a geomedian, a product unique to DE Africa because it provides a cloud-free composite over a given period.
+
+```{r rstacload}
+s_obj <- stac("https://explorer.digitalearth.africa/stac")
+
+bbox <- c(36.74, -0.53, 37.43, -1.14)
+
+url <- stac("https://explorer.digitalearth.africa/stac") %>%
+  stac_search(collections = "gm_ls8_ls9_annual",
+              bbox = bbox, datetime = "2021-01-01/2021-12-31", limit=40) %>%
+  get_request() %>% assets_select(asset_names=
+  c("SR_B2","SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7", "SMAD")) %>%
+  assets_url() 
+url
+```
+
+We will start with just one tile, selected below.
+
+```{r url}
+url <- url[grepl("y076", url) & grepl("x218", url)]
+
+https <- "https://deafrica-services.s3.af-south-1.amazonaws.com"
+url <- paste0(https, gsub( "s3://deafrica-services", "", url))
+```
+
+We will rename the bands to make them more accessible.
+
+```{r list, echo=TRUE}
+stack <- rast(url)
+names(stack)
+names(stack) <- c('SMAD', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7')
+```
+
+Plot the RGB true-colour image of the geomedian.
+
+```{r rgb}
+plotRGB(stack, r= "B4", b = "B2", g = "B3", scale=8000, stretch= 'lin')
+```
+
+# Conclusion
+
+We can see that DE Africa's unique geomedian is accessible in R.

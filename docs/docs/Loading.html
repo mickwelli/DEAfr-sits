@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Michael Wellington" />
+
+<meta name="date" content="2024-06-07" />
+
+<title>Loading Digital Earth Africa data</title>
+
+<script src="site_libs/header-attrs-2.26/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Digital Earth Africa and R SITS</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="Loading.html">Loading Data</a>
+</li>
+<li>
+  <a href="Data-Cubes.html">Data Cubes</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Loading Digital Earth Africa data</h1>
+<h4 class="author">Michael Wellington</h4>
+<h4 class="date">2024-06-07</h4>
+
+</div>
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The team behind the R packages <code>rstac</code> and
+<code>sits</code> (Satellite Image Time Series Analysis on Earth
+Observation Data Cubes) have expertly made Digital Earth Africa
+available through R. This means the many operations available through
+the <code>sits</code> package can be applied to Digital Earth Africa
+data. It also means that R users can easily access Digital Earth Africa
+data for their own purposes.</p>
+</div>
+<div id="load-packages" class="section level2">
+<h2>Load packages</h2>
+<p>The installation functions have been commented out (#). Remove the #
+to install the listed packages if not already installed. The
+<code>library()</code> command then loads packages.</p>
+<pre class="r"><code>#install.packages(&quot;sf&quot;)
+#install.packages(&quot;terra&quot;)
+#install.packages(&quot;sits&quot;, dependencies = TRUE)
+
+library(sf)
+library(terra)
+library(sits)
+library(rstac)</code></pre>
+</div>
+<div id="load-sentinel-2-data-with-sits" class="section level2">
+<h2>Load Sentinel-2 data with SITS</h2>
+<p>The following code loads Sentinel-2 images for a defined period and
+area in Madagascar. Note the definition of source, collection, band
+names, dates, and coordinates in the loading function. The returned
+object is a `sits cube’ which can be queried and plotted, as below.</p>
+<pre class="r"><code>dea_s2_cube &lt;- sits_cube(
+  source = &quot;DEAFRICA&quot;,
+  collection = &quot;SENTINEL-2-L2A&quot;,
+  roi = c(
+    lon_min = 46.1, lat_min = -15.6,
+    lon_max = 46.6, lat_max = -16.1
+  ),
+  bands = c(
+    &quot;B02&quot;, &quot;B03&quot;, &quot;B04&quot;,
+    &quot;B05&quot;, &quot;B06&quot;, &quot;B07&quot;,
+    &quot;B08&quot;, &quot;B8A&quot;, &quot;B11&quot;,
+    &quot;B12&quot;, &quot;CLOUD&quot;
+  ),
+  start_date = &quot;2019-04-01&quot;,
+  end_date = &quot;2019-11-30&quot;
+)</code></pre>
+<pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%</code></pre>
+<pre class="r"><code>plot(dea_s2_cube, red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B08&quot;)</code></pre>
+<p><img src="Loading_files/figure-html/s2cube-1.png" width="672" /> ##
+Loading with rstac</p>
+<p>We can also load Digital Earth Africa directly through STAC metadata
+using the rstac package. Note the naming conventions used for
+collections, dates, and stac endpoints. Some guidance on this is
+available on the <a
+href="https://docs.digitalearthafrica.org/en/latest/sandbox/notebooks/Frequently_used_code/Downloading_data_with_STAC.html">Digital
+Earth Africa documentation</a> and some <a
+href="https://stacspec.org/en/tutorials/1-download-data-using-r/">stacspec
+documentation</a>.</p>
+<pre class="r"><code>s_obj &lt;- stac(&quot;https://explorer.digitalearth.africa/stac&quot;)
+
+bbox &lt;- c(46.1, -15.6, 46.6, -16.1)
+
+url &lt;- stac(&quot;https://explorer.digitalearth.africa/stac&quot;) %&gt;%
+  stac_search(collections = &quot;s2_l2a&quot;,
+              bbox = bbox, datetime = &quot;2019-04-03/2019-04-05&quot;, limit=40) %&gt;%
+  get_request() %&gt;% assets_select(asset_names=
+  c(&quot;B02&quot;, &quot;B04&quot;,
+    &quot;B08&quot;)) %&gt;%
+  assets_url() </code></pre>
+</div>
+<div id="plot-data-loaded-using-stac" class="section level2">
+<h2>Plot data loaded using stac</h2>
+<p>Below, the <code>rast</code> function from the <code>terra</code>
+package is used to bring the data into memory as a
+<code>SpatRaster</code> object. When plotted, we can see the same
+Sentinel-2 image we loaded using SITS.</p>
+<pre class="r"><code>stack &lt;- rast(url)
+plotRGB(stack, r= &quot;B04&quot;, b = &quot;B02&quot;, g = &quot;B08&quot;, scale=10000, stretch= &#39;hist&#39;)</code></pre>
+<p><img src="Loading_files/figure-html/list-1.png" width="672" /></p>
+</div>
+<div id="view-available-collections" class="section level2">
+<h2>View available collections</h2>
+<p>We can view the available data collections from Digital Earth Africa
+using the <code>sits_list_collections()</code> function as below. Note
+the bands listed, the names of which can be used to access the data. In
+some cases, such as for surface reflectance, we may need more
+information about the bands to load. In these cases we can refer to the
+<a href="https://explorer.digitalearth.africa/">DE Africa Explorer</a>.
+For example, we can see that <code>B05</code> corresponds to the NIR
+band for Landsat-8 by checking product specifications in the
+Explorer.</p>
+<pre class="r"><code>sits_list_collections(source = &#39;DEAFRICA&#39;)</code></pre>
+<pre><code>## DEAFRICA:
+## - ALOS-PALSAR-MOSAIC (PALSAR/ALOS)
+## - grid system: 
+## - bands: HH HV CLOUD
+## - opendata collection 
+## 
+## - DEM-COP-30 (COP-DEM/30)
+## - grid system: 
+## - bands: ELEVATION
+## - opendata collection 
+## 
+## - LS5-SR (LANDSAT-5/TM-MSS)
+## - grid system: WRS-2
+## - bands: B01 B02 B03 B04 B05 B07 CLOUD
+## - opendata collection 
+## 
+## - LS7-SR (LANDSAT-7/ETM)
+## - grid system: WRS-2
+## - bands: B01 B02 B03 B04 B05 B07 CLOUD
+## - opendata collection 
+## 
+## - LS8-SR (LANDSAT-8/OLI)
+## - grid system: WRS-2
+## - bands: B01 B02 B03 B04 B05 B06 B07 CLOUD
+## - opendata collection 
+## 
+## - LS9-SR (LANDSAT-9/OLI)
+## - grid system: WRS-2
+## - bands: B01 B02 B03 B04 B05 B06 B07 CLOUD
+## - opendata collection 
+## 
+## - NDVI-ANOMALY (LANDSAT-SENTINEL/OLI-MSI)
+## - grid system: 
+## - bands: NDVI-MEAN NDVI-STD-ANOMALY
+## - opendata collection 
+## 
+## - RAINFALL-CHIRPS-DAILY (CHIRPS/CHIRPS)
+## - grid system: 
+## - bands: RAINFALL
+## - opendata collection 
+## 
+## - RAINFALL-CHIRPS-MONTHLY (CHIRPS/CHIRPS)
+## - grid system: 
+## - bands: RAINFALL
+## - opendata collection 
+## 
+## - SENTINEL-1-RTC (SENTINEL-1/RTC)
+## - grid system: MGRS
+## - bands: VV VH
+## - opendata collection 
+## 
+## - SENTINEL-2-L2A (SENTINEL-2/MSI)
+## - grid system: MGRS
+## - bands: B01 B02 B03 B04 B05 B06 B07 B08 B8A B09 B11 B12 CLOUD
+## - opendata collection</code></pre>
+<pre class="r"><code>dea_ls8_cube &lt;- sits_cube(
+  source = &quot;DEAFRICA&quot;,
+  collection = &quot;LS8-SR&quot;,
+  roi = c(
+    lon_min = 46.1, lat_min = -15.6,
+    lon_max = 46.6, lat_max = -16.1
+  ),
+  bands = c(
+    &quot;B04&quot;, &quot;B02&quot;, &quot;B05&quot;
+  ),
+  start_date = &quot;2019-04-01&quot;,
+  end_date = &quot;2019-11-30&quot;
+)</code></pre>
+<pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%</code></pre>
+<pre class="r"><code>plot(dea_ls8_cube, red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B05&quot;)</code></pre>
+<p><img src="Loading_files/figure-html/ls8cube-1.png" width="672" /></p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

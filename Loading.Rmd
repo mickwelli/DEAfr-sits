@@ -56,8 +56,6 @@ plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
 We can also load Digital Earth Africa directly through STAC metadata using the rstac package. Note the naming conventions used for collections, dates, and stac endpoints. Some guidance on this is available on the [Digital Earth Africa documentation](https://docs.digitalearthafrica.org/en/latest/sandbox/notebooks/Frequently_used_code/Downloading_data_with_STAC.html) and some [stacspec documentation](https://stacspec.org/en/tutorials/1-download-data-using-r/).
 
 ```{r rstacload}
-s_obj <- stac("https://explorer.digitalearth.africa/stac")
-
 bbox <- c(46.1, -15.6, 46.6, -16.1)
 
 url <- stac("https://explorer.digitalearth.africa/stac") %>%

@@ -6,3 +6,5 @@ navbar:
       href: Loading.html
     - text: "Data Cubes"
       href: Data-Cubes.html
+    - text: "Classification with geomedian"
+      href: Classification.html
