@@ -12,49 +12,120 @@ library(sf)
 library(terra)
 library(sits)
 library(rstac)
+library(rnaturalearth)
+library(tidyverse)
 ```
+# Load and plot Murang'a boundary
+
+We'd like to limit our classification to the Murang'a county in Kenya. We've obtained the shapefile boundary from the [Database of Global Administrative Areas (GADM) website](https://gadm.org/) and stored it in this repositories Data folder.
+
+```{r muranga bound}
+kenya_a2 <- read_sf('data/gadm41_KEN_2.shp')
+kenya_muranga <- kenya_a2 %>% filter(NAME_1 == "Murang'a")
+plot(kenya_muranga['NAME_2'])
+```
+# Classes
+* Water
+* Grassland
+* Cropland
+* Urban
+* Forest
+
 
 # Load geomedian
 
 This script loads a geomedian, a product unique to DE Africa because it provides a cloud-free composite over a given period.
 
+SITS accepts a bounding box (bbox) as an area of interest, so we use the spatial extent of the Murang'a County for this parameter.
+
 ```{r rstacload}
-s_obj <- stac("https://explorer.digitalearth.africa/stac")
-
-bbox <- c(36.74, -0.53, 37.43, -1.14)
-
-url <- stac("https://explorer.digitalearth.africa/stac") %>%
-  stac_search(collections = "gm_ls8_ls9_annual",
-              bbox = bbox, datetime = "2021-01-01/2021-12-31", limit=40) %>%
-  get_request() %>% assets_select(asset_names=
-  c("SR_B2","SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7", "SMAD")) %>%
-  assets_url() 
-url
+dea_gm_cube <- sits_cube(
+  source = "DEAFRICA",
+  collection = "GM-LS8-LS9-ANNUAL",
+  roi = c(
+    lon_min = ext(kenya_muranga)$xmin[[1]], lat_min = ext(kenya_muranga)$ymin[[1]],
+    lon_max = ext(kenya_muranga)$xmax[[1]], lat_max = ext(kenya_muranga)$ymax[[1]]
+  ),
+  bands = c("SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7", "SMAD"),
+  start_date = "2019-01-01",
+  end_date = "2022-12-31"
+)
+plot(dea_gm_cube, red = "B04", blue = "B02", green = "B03")
+```
+```{r trainingdat}
+muranga_points <- st_read('data/Muranga_classes.shp')
+muranga_points
 ```
 
-We will start with just one tile, selected below.
+```{r training_dat}
 
-```{r url}
-url <- url[grepl("y076", url) & grepl("x218", url)]
-
-https <- "https://deafrica-services.s3.af-south-1.amazonaws.com"
-url <- paste0(https, gsub( "s3://deafrica-services", "", url))
+series <- sits_get_data(
+    cube=dea_gm_cube,
+    label_attr = "Class",
+    samples='data/Muranga_classes.shp')
 ```
 
-We will rename the bands to make them more accessible.
-
-```{r list, echo=TRUE}
-stack <- rast(url)
-names(stack)
-names(stack) <- c('SMAD', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7')
+```{r series}
+summary(series)
+```
+```{r bands}
+dea_gm_cube$file_info
 ```
 
-Plot the RGB true-colour image of the geomedian.
+```{r sampleplot}
+series %>% 
+  sits_apply(NDVI = (B05 - B04) / (B05 + B04))  %>% 
+  sits_apply(EVI = 2.5 * (B05 - B04) / ((B05 + 6.0 * B04 - 7.5 * B02) + 1.0))  %>% 
+  sits_select(bands = c("NDVI", "EVI"))
 
-```{r rgb}
-plotRGB(stack, r= "B4", b = "B2", g = "B3", scale=8000, stretch= 'lin')
+```
+```{r modelsetup}
+
+set.seed(20)
+
+rfor_model <- sits_train(
+  series,
+  ml_method = sits_rfor()
+)
+plot(rfor_model)
+```
+```{r randfor}
+muranga_probs <- sits_classify(
+  data = dea_gm_cube,
+  ml_model = rfor_model,
+  output_dir = "data",
+  version = "rf-raster",
+  multicores = 4,
+  memsize = 16
+)
+
+plot(muranga_probs, labels = "Forest", palette = "YlGn")
+```
+## Classified Map
+```{r class map}
+muranga_smooth <- sits_smooth(
+  cube = muranga_probs,
+  multicores = 4,
+  memsize = 12,
+  output_dir = "data",
+  version = "rf-raster"
+)
+```
+
+
+```{r class map}
+muranga_class <- sits_label_classification(
+  cube = muranga_smooth,
+  multicores = 4,
+  memsize = 12,
+  output_dir = "data",
+  version = "rf-raster"
+)
+
+# Plot the thematic map
+plot(muranga_class)
 ```
 
 # Conclusion
 
-We can see that DE Africa's unique geomedian is accessible in R.
+We can see that DE Africa's unique geomedian is accessible for classification in R.
