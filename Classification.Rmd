@@ -102,7 +102,7 @@ muranga_probs <- sits_classify(
 plot(muranga_probs, labels = "Forest", palette = "YlGn")
 ```
 ## Classified Map
-```{r class map}
+```{r classsmooth}
 muranga_smooth <- sits_smooth(
   cube = muranga_probs,
   multicores = 4,
@@ -127,16 +127,16 @@ plot(muranga_class, tile=muranga_class$tile[2])
 ```
 ## Create  mosaic of classified classes
 ```{r mosaic}
-muranga_mosaic <- sits_mosaic(
-  roi = st_transform(st_union(kenya_muranga), "EPSG:6933"),
-  crs = "EPSG:6933",
-  cube = muranga_class,
-  multicores = 4,
-  output_dir = "data",
-  version = "rf-raster"
-)
+#muranga_mosaic <- sits_mosaic(
+#  roi = st_transform(st_union(kenya_muranga), "EPSG:6933"),
+#  crs = "EPSG:6933",
+#  cube = muranga_class,
+#  multicores = 2,
+#  output_dir = "data",
+#  version = "rf-raster"
+#)
 
-plot(muranga_mosaic)
+#plot(muranga_mosaic, legend_position = "inside")
 ```
 
 # Conclusion

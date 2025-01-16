@@ -250,6 +250,9 @@ $(document).ready(function () {
 <li>
   <a href="Data-Cubes.html">Data Cubes</a>
 </li>
+<li>
+  <a href="Classification.html">Classification with geomedian</a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         
@@ -327,9 +330,7 @@ href="https://docs.digitalearthafrica.org/en/latest/sandbox/notebooks/Frequently
 Earth Africa documentation</a> and some <a
 href="https://stacspec.org/en/tutorials/1-download-data-using-r/">stacspec
 documentation</a>.</p>
-<pre class="r"><code>s_obj &lt;- stac(&quot;https://explorer.digitalearth.africa/stac&quot;)
-
-bbox &lt;- c(46.1, -15.6, 46.6, -16.1)
+<pre class="r"><code>bbox &lt;- c(46.1, -15.6, 46.6, -16.1)
 
 url &lt;- stac(&quot;https://explorer.digitalearth.africa/stac&quot;) %&gt;%
   stac_search(collections = &quot;s2_l2a&quot;,
