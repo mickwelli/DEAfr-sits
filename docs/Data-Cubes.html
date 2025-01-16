@@ -15,7 +15,7 @@
 
 <title>Data Cubes</title>
 
-<script src="site_libs/header-attrs-2.26/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -313,19 +313,25 @@ the series, noting that it is cloudy.</p>
 )</code></pre>
 <pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================================================| 100%</code></pre>
 <pre class="r"><code>plot(dea_s2_cube, red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B08&quot;)</code></pre>
+<pre><code>## Warning: [minmax] min and max values not available for all layers. See
+## &#39;setMinMax&#39; or &#39;global&#39;</code></pre>
 <p><img src="Data-Cubes_files/figure-html/s2cube-1.png" width="672" /></p>
 <p>Inspecting the data cube object, below, shows that two tiles have
 been returned. We can check the tiles to see their extent.</p>
 <pre class="r"><code>dea_s2_cube</code></pre>
-<pre><code>## # A tibble: 2 × 11
+<pre><code>## # A tibble: 2 × 12
 ##   source   collection   satellite sensor tile    xmin   xmax   ymin   ymax crs  
 ##   &lt;chr&gt;    &lt;chr&gt;        &lt;chr&gt;     &lt;chr&gt;  &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;
 ## 1 DEAFRICA SENTINEL-2-… SENTINEL… MSI    37MBU 199980 309780 9.79e6 9.90e6 EPSG…
 ## 2 DEAFRICA SENTINEL-2-… SENTINEL… MSI    36MZD 799980 909780 9.79e6 9.90e6 EPSG…
-## # ℹ 1 more variable: file_info &lt;list&gt;</code></pre>
+## # ℹ 2 more variables: labels &lt;list&gt;, file_info &lt;list&gt;</code></pre>
 <pre class="r"><code>plot(dea_s2_cube %&gt;% filter(tile==&#39;36MZD&#39;), red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B08&quot;)</code></pre>
+<pre><code>## Warning: [minmax] min and max values not available for all layers. See
+## &#39;setMinMax&#39; or &#39;global&#39;</code></pre>
 <p><img src="Data-Cubes_files/figure-html/plottile1-1.png" width="672" /></p>
 <pre class="r"><code>plot(dea_s2_cube %&gt;% filter(tile==&#39;37MBU&#39;), red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B08&quot;)</code></pre>
+<pre><code>## Warning: [minmax] min and max values not available for all layers. See
+## &#39;setMinMax&#39; or &#39;global&#39;</code></pre>
 <p><img src="Data-Cubes_files/figure-html/plottile2-1.png" width="672" /></p>
 <p>We can see that tile <code>37MBU</code> covers the entire extent, so
 we will use that tile. It is selected in the line of code below.</p>
@@ -362,6 +368,8 @@ series and note that cloud masking has been applied.</p>
 <pre class="r"><code>dea_s2_cube_reg %&gt;% 
   dplyr::filter(tile == &quot;37MBU&quot;)  %&gt;% 
   plot(red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B03&quot;)</code></pre>
+<pre><code>## Warning: [minmax] min and max values not available for all layers. See
+## &#39;setMinMax&#39; or &#39;global&#39;</code></pre>
 <p><img src="Data-Cubes_files/figure-html/regplot-1.png" width="672" /></p>
 <pre class="r"><code>timeline_reg &lt;- sits_timeline(dea_s2_cube_reg)
 

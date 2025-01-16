@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Michael Wellington" />
+
+<meta name="date" content="2024-07-01" />
+
+<title>Data Cubes</title>
+
+<script src="site_libs/header-attrs-2.26/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Digital Earth Africa and R SITS</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="Loading.html">Loading Data</a>
+</li>
+<li>
+  <a href="Data-Cubes.html">Data Cubes</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Data Cubes</h1>
+<h4 class="author">Michael Wellington</h4>
+<h4 class="date">2024-07-01</h4>
+
+</div>
+
+
+<div id="earth-observation-data-cubes" class="section level2">
+<h2>Earth Observation Data Cubes</h2>
+<p>The SITS package implements a concept of data cubes to store and deal
+with data in space and time. This is not to be confused with the Open
+Data Cube, which is a broader way of organising Earth Observation data
+on which Digital Earth Africa is implemented.</p>
+<p>In the last script, we loaded Digital Earth Africa Sentinel-2 data
+using the <code>sits_cube()</code> function which returned a data cube,
+stored locally in our R environment. This script will further explore
+data cubes objects and conducting operations on them.</p>
+<p>To begin, packages are loaded.</p>
+<pre class="r"><code>library(sf)</code></pre>
+<pre><code>## Warning: package &#39;sf&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Linking to GEOS 3.9.3, GDAL 3.5.2, PROJ 8.2.1; sf_use_s2() is TRUE</code></pre>
+<pre class="r"><code>library(terra)</code></pre>
+<pre><code>## Warning: package &#39;terra&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## terra 1.7.71</code></pre>
+<pre class="r"><code>library(sits)</code></pre>
+<pre><code>## SITS - satellite image time series analysis.</code></pre>
+<pre><code>## Loaded sits v1.5.0.
+##         See ?sits for help, citation(&quot;sits&quot;) for use in publication.
+##         Documentation avaliable in https://e-sensing.github.io/sitsbook/.</code></pre>
+<pre class="r"><code>library(rstac)</code></pre>
+<pre><code>## Warning: package &#39;rstac&#39; was built under R version 4.2.3</code></pre>
+<pre class="r"><code>library(parallel)
+library(tidyverse)</code></pre>
+<pre><code>## Warning: package &#39;tidyverse&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;tibble&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;tidyr&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;readr&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;purrr&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;dplyr&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;stringr&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;forcats&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## Warning: package &#39;lubridate&#39; was built under R version 4.2.3</code></pre>
+<pre><code>## ── Attaching core tidyverse packages ────────────────────────────────────────── tidyverse 2.0.0 ──
+## ✔ dplyr     1.1.4     ✔ readr     2.1.5
+## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+## ✔ ggplot2   3.5.0     ✔ tibble    3.2.1
+## ✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+## ✔ purrr     1.0.2</code></pre>
+<pre><code>## ── Conflicts ──────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ tidyr::extract() masks terra::extract()
+## ✖ dplyr::filter()  masks stats::filter()
+## ✖ dplyr::lag()     masks stats::lag()
+## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div id="load-a-sentinel-2-data-cube" class="section level2">
+<h2>Load a Sentinel-2 data cube</h2>
+<p>Sentinel-2 images for an area around the Kenyan capital, Nairobi, is
+loaded and stored as a data cube object. We can plot the first image in
+the series, noting that it is cloudy.</p>
+<pre class="r"><code>dea_s2_cube &lt;- sits_cube(
+  source = &quot;DEAFRICA&quot;,
+  collection = &quot;SENTINEL-2-L2A&quot;,
+  roi = c(
+    lon_min = 36.65, lat_min = -1.48,
+    lon_max = 36.95, lat_max = -1.18
+  ),
+  bands = c(
+    &quot;B02&quot;, &quot;B03&quot;, &quot;B04&quot;,
+    &quot;B05&quot;, &quot;B06&quot;, &quot;B07&quot;,
+    &quot;B08&quot;, &quot;B8A&quot;, &quot;B11&quot;,
+    &quot;B12&quot;, &quot;CLOUD&quot;
+  ),
+  start_date = &quot;2023-01-01&quot;,
+  end_date = &quot;2023-01-31&quot;
+)</code></pre>
+<pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |===================================                                   |  50%  |                                                                              |======================================================================| 100%</code></pre>
+<pre class="r"><code>plot(dea_s2_cube, red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B08&quot;)</code></pre>
+<p><img src="Data-Cubes_files/figure-html/s2cube-1.png" width="672" /></p>
+<p>Inspecting the data cube object, below, shows that two tiles have
+been returned. We can check the tiles to see their extent.</p>
+<pre class="r"><code>dea_s2_cube</code></pre>
+<pre><code>## # A tibble: 2 × 11
+##   source   collection   satellite sensor tile    xmin   xmax   ymin   ymax crs  
+##   &lt;chr&gt;    &lt;chr&gt;        &lt;chr&gt;     &lt;chr&gt;  &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;
+## 1 DEAFRICA SENTINEL-2-… SENTINEL… MSI    37MBU 199980 309780 9.79e6 9.90e6 EPSG…
+## 2 DEAFRICA SENTINEL-2-… SENTINEL… MSI    36MZD 799980 909780 9.79e6 9.90e6 EPSG…
+## # ℹ 1 more variable: file_info &lt;list&gt;</code></pre>
+<pre class="r"><code>plot(dea_s2_cube %&gt;% filter(tile==&#39;36MZD&#39;), red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B08&quot;)</code></pre>
+<p><img src="Data-Cubes_files/figure-html/plottile1-1.png" width="672" /></p>
+<pre class="r"><code>plot(dea_s2_cube %&gt;% filter(tile==&#39;37MBU&#39;), red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B08&quot;)</code></pre>
+<p><img src="Data-Cubes_files/figure-html/plottile2-1.png" width="672" />
+We can see that tile <code>37MBU</code> covers the entire extent, so we
+will use that tile.</p>
+<pre class="r"><code>dea_s2_cube &lt;- dea_s2_cube %&gt;% filter(tile==&#39;37MBU&#39;)</code></pre>
+</div>
+<div id="regularising-the-data-cube" class="section level2">
+<h2>Regularising the data cube</h2>
+<p>Plotting the timeline below shows the time series looks quite
+regular, which should be expected given regular overpass dates of
+Sentinel-2.</p>
+<pre class="r"><code>timeline &lt;- sits_timeline(dea_s2_cube)
+
+ggplot() + geom_point(aes(x=timeline, y=1))</code></pre>
+<p><img src="Data-Cubes_files/figure-html/timeline2-1.png" width="672" />
+To regularise the data cube, we must set the number of cores available
+for parallel computing. The function below returns the total number of
+cores available. Best performance is normally achieved by setting a
+value below this.</p>
+<pre class="r"><code>detectCores()</code></pre>
+<pre><code>## [1] 8</code></pre>
+<p>The function below regularises the data cube to 20-m resolution and
+10 day frequency.</p>
+<p>This can take some time to run.</p>
+<pre class="r"><code>dea_s2_cube_reg &lt;- sits_regularize(
+  output_dir = tempdir(),        # directory for storing regularised output
+  cube       = dea_s2_cube,      # raster cube object to regularise
+  res        = 20,               # 20m spatial resolution
+  period     = &quot;P10D&quot;,           # time period
+  multicores = 4                 # number of cores
+)</code></pre>
+<pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |==                                                                    |   3%  |                                                                              |=====                                                                 |   7%  |                                                                              |=======                                                               |  10%  |                                                                              |=========                                                             |  13%  |                                                                              |============                                                          |  17%  |                                                                              |==============                                                        |  20%  |                                                                              |================                                                      |  23%  |                                                                              |===================                                                   |  27%  |                                                                              |=====================                                                 |  30%  |                                                                              |=======================                                               |  33%  |                                                                              |==========================                                            |  37%  |                                                                              |============================                                          |  40%  |                                                                              |==============================                                        |  43%  |                                                                              |=================================                                     |  47%  |                                                                              |===================================                                   |  50%  |                                                                              |=====================================                                 |  53%  |                                                                              |========================================                              |  57%  |                                                                              |==========================================                            |  60%  |                                                                              |============================================                          |  63%  |                                                                              |===============================================                       |  67%  |                                                                              |=================================================                     |  70%  |                                                                              |===================================================                   |  73%  |                                                                              |======================================================                |  77%  |                                                                              |========================================================              |  80%  |                                                                              |==========================================================            |  83%  |                                                                              |=============================================================         |  87%  |                                                                              |===============================================================       |  90%  |                                                                              |=================================================================     |  93%  |                                                                              |====================================================================  |  97%  |                                                                              |======================================================================| 100%</code></pre>
+<p>Following this procedure, we can inspect the first image in the time
+series and note that cloud masking has been applied.</p>
+<pre class="r"><code>dea_s2_cube_reg %&gt;% 
+  dplyr::filter(tile == &quot;37MBU&quot;)  %&gt;% 
+  plot(red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B03&quot;)</code></pre>
+<p><img src="Data-Cubes_files/figure-html/regplot-1.png" width="672" /></p>
+<pre class="r"><code>timeline_reg &lt;- sits_timeline(dea_s2_cube_reg)
+
+ggplot() + geom_point(aes(x=timeline_reg, y=1))</code></pre>
+<p><img src="Data-Cubes_files/figure-html/regtime-1.png" width="672" /></p>
+</div>
+<div id="calculating-band-indices" class="section level2">
+<h2>Calculating band indices</h2>
+<p>Now that the data cube is regularised, we can perform analysis and
+implement workflows like classification.</p>
+<p>Below, NDVI is calculated and plotted.</p>
+<pre class="r"><code>reg_cube &lt;- sits_apply(dea_s2_cube_reg,
+  NDVI = (B08 - B04) / (B08 + B04),
+  output_dir = tempdir()
+)
+
+plot(reg_cube, band = &quot;NDVI&quot;, palette = &quot;RdYlGn&quot;)</code></pre>
+<p><img src="Data-Cubes_files/figure-html/ndviplot-1.png" width="672" /></p>
+</div>
+<div id="spectral-mixture-analysis" class="section level2">
+<h2>Spectral mixture analysis</h2>
+<p>Mixed pixels contain a variety of spectral responses from different
+land use/land cover types (e.g. forest, grassland, water). If the
+spectral response of a pure land cover class is known (the value is
+called an endmember), mixture analysis provides a means to estimate the
+proportions of each land cover class in a pixel.</p>
+<pre class="r"><code>em &lt;- tibble::tribble(
+  ~class,   ~B02, ~B03, ~B04, ~B8A, ~B11, ~B12,
+  &quot;forest&quot;,  200,  352,  189, 2800, 1340,  546,
+  &quot;soil&quot;,    400,  650,  700, 3600, 3500, 1800,
+  &quot;water&quot;,   700, 1100, 1400,  850,   40,   26
+)
+# Generate the mixture model
+reg_cube &lt;- sits_mixture_model(
+  data = reg_cube,
+  endmembers = em,
+  multicores = 4,
+  memsize = 12,
+  output_dir = tempdir()
+)</code></pre>
+<pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |=======================                                               |  33%  |                                                                              |===============================================                       |  67%  |                                                                              |======================================================================| 100%</code></pre>
+<pre class="r"><code>plot(reg_cube, band = &quot;FOREST&quot;, palette = &quot;Greens&quot;)</code></pre>
+<p><img src="Data-Cubes_files/figure-html/forest-1.png" width="672" /></p>
+<pre class="r"><code>plot(reg_cube, band = &quot;WATER&quot;, palette = &quot;Blues&quot;)</code></pre>
+<p><img src="Data-Cubes_files/figure-html/water-1.png" width="672" /></p>
+<pre class="r"><code>plot(reg_cube, band = &quot;SOIL&quot;, palette = &quot;OrRd&quot;)</code></pre>
+<p><img src="Data-Cubes_files/figure-html/soil-1.png" width="672" /></p>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>We can see that the SITS package makes it easy to create and perform
+operations on data cubes using data from Digital Earth Africa. Next,
+we’ll see how the package can be used for classification.</p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
