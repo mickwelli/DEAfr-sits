@@ -15,7 +15,7 @@
 
 <title>Classification with geomedian</title>
 
-<script src="site_libs/header-attrs-2.26/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -275,82 +275,282 @@ $(document).ready(function () {
 <div id="load-packages" class="section level1">
 <h1>Load packages</h1>
 <pre class="r"><code>library(sf)</code></pre>
-<pre><code>## Linking to GEOS 3.9.3, GDAL 3.5.2, PROJ 8.2.1; sf_use_s2() is TRUE</code></pre>
+<pre><code>## Linking to GEOS 3.12.2, GDAL 3.9.3, PROJ 9.4.1; sf_use_s2() is TRUE</code></pre>
 <pre class="r"><code>library(terra)</code></pre>
-<pre><code>## terra 1.7.71</code></pre>
+<pre><code>## terra 1.8.10</code></pre>
 <pre class="r"><code>library(sits)</code></pre>
 <pre><code>## SITS - satellite image time series analysis.</code></pre>
-<pre><code>## Loaded sits v1.5.0.
+<pre><code>## Loaded sits v1.5.2.
 ##         See ?sits for help, citation(&quot;sits&quot;) for use in publication.
 ##         Documentation avaliable in https://e-sensing.github.io/sitsbook/.</code></pre>
-<pre class="r"><code>library(rstac)</code></pre>
+<pre><code>## Important: Please read &quot;Release Notes for SITS 1.5.2&quot; in
+##                 https://github.com/e-sensing/sits.</code></pre>
+<pre class="r"><code>library(rstac)
+library(rnaturalearth)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching core tidyverse packages ────────────────────── tidyverse 2.0.0 ──
+## ✔ dplyr     1.1.4     ✔ readr     2.1.5
+## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+## ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+## ✔ purrr     1.0.2</code></pre>
+<pre><code>## ── Conflicts ──────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ tidyr::extract() masks terra::extract()
+## ✖ dplyr::filter()  masks stats::filter()
+## ✖ dplyr::lag()     masks stats::lag()
+## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div id="load-and-plot-muranga-boundary" class="section level1">
+<h1>Load and plot Murang’a boundary</h1>
+<p>We’d like to limit our classification to the Murang’a county in
+Kenya. We’ve obtained the shapefile boundary from the <a
+href="https://gadm.org/">Database of Global Administrative Areas (GADM)
+website</a> and stored it in this repositories Data folder.</p>
+<pre class="r"><code>kenya_a2 &lt;- read_sf(&#39;data/gadm41_KEN_2.shp&#39;)
+kenya_muranga &lt;- kenya_a2 %&gt;% filter(NAME_1 == &quot;Murang&#39;a&quot;)
+plot(kenya_muranga[&#39;NAME_2&#39;])</code></pre>
+<p><img src="Classification_files/figure-html/muranga%20bound-1.png" width="672" />
+# Classes * Water * Grassland * Cropland * Urban * Forest</p>
 </div>
 <div id="load-geomedian" class="section level1">
 <h1>Load geomedian</h1>
 <p>This script loads a geomedian, a product unique to DE Africa because
 it provides a cloud-free composite over a given period.</p>
-<pre class="r"><code>s_obj &lt;- stac(&quot;https://explorer.digitalearth.africa/stac&quot;)
+<p>SITS accepts a bounding box (bbox) as an area of interest, so we use
+the spatial extent of the Murang’a County for this parameter.</p>
+<pre class="r"><code>dea_gm_cube &lt;- sits_cube(
+  source = &quot;DEAFRICA&quot;,
+  collection = &quot;GM-LS8-LS9-ANNUAL&quot;,
+  roi = c(
+    lon_min = ext(kenya_muranga)$xmin[[1]], lat_min = ext(kenya_muranga)$ymin[[1]],
+    lon_max = ext(kenya_muranga)$xmax[[1]], lat_max = ext(kenya_muranga)$ymax[[1]]
+  ),
+  bands = c(&quot;SR_B2&quot;, &quot;SR_B3&quot;, &quot;SR_B4&quot;, &quot;SR_B5&quot;, &quot;SR_B6&quot;, &quot;SR_B7&quot;, &quot;SMAD&quot;),
+  start_date = &quot;2019-01-01&quot;,
+  end_date = &quot;2022-12-31&quot;
+)</code></pre>
+<pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |==================                                                    |  25%  |                                                                              |===================================                                   |  50%  |                                                                              |====================================================                  |  75%  |                                                                              |======================================================================| 100%</code></pre>
+<pre class="r"><code>plot(dea_gm_cube, red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B03&quot;)</code></pre>
+<pre><code>## Warning: [minmax] min and max values not available for all layers. See
+## &#39;setMinMax&#39; or &#39;global&#39;</code></pre>
+<p><img src="Classification_files/figure-html/rstacload-1.png" width="672" /></p>
+<pre class="r"><code>muranga_points &lt;- st_read(&#39;data/Muranga_classes.shp&#39;)</code></pre>
+<pre><code>## Reading layer `Muranga_classes&#39; from data source 
+##   `C:\Users\Michael\OneDrive - Australian National University\Proposals_Plans\jobs\DEAfrica\webtry\RSITS-Africa\DEAfr-sits\data\Muranga_classes.shp&#39; 
+##   using driver `ESRI Shapefile&#39;
+## Simple feature collection with 1158 features and 2 fields
+## Geometry type: POINT
+## Dimension:     XY
+## Bounding box:  xmin: 36.70734 ymin: -1.062873 xmax: 37.41086 ymax: -0.5818391
+## Geodetic CRS:  WGS 84</code></pre>
+<pre class="r"><code>muranga_points</code></pre>
+<pre><code>## Simple feature collection with 1158 features and 2 fields
+## Geometry type: POINT
+## Dimension:     XY
+## Bounding box:  xmin: 36.70734 ymin: -1.062873 xmax: 37.41086 ymax: -0.5818391
+## Geodetic CRS:  WGS 84
+## First 10 features:
+##    id     Class                    geometry
+## 1   1     Water  POINT (36.71006 -0.635504)
+## 2   2     Water  POINT (36.7103 -0.6349284)
+## 3   3 Grassland POINT (36.70956 -0.6364749)
+## 4   4 Grassland  POINT (36.7111 -0.6348632)
+## 5   5     Water POINT (36.71012 -0.6359683)
+## 6   6 Grassland POINT (36.71119 -0.6350704)
+## 7   7 Grassland POINT (36.71282 -0.6350579)
+## 8   8 Grassland POINT (36.71561 -0.6324908)
+## 9   9 Grassland  POINT (36.7162 -0.6321665)
+## 10 10 Grassland POINT (36.70863 -0.6440584)</code></pre>
+<pre class="r"><code>series &lt;- sits_get_data(
+    cube=dea_gm_cube,
+    label_attr = &quot;Class&quot;,
+    samples=&#39;data/Muranga_classes.shp&#39;)</code></pre>
+<pre><code>## although coordinates are longitude/latitude, st_union assumes that they are
+## planar
+## although coordinates are longitude/latitude, st_union assumes that they are
+## planar
+## although coordinates are longitude/latitude, st_union assumes that they are
+## planar
+## although coordinates are longitude/latitude, st_union assumes that they are
+## planar</code></pre>
+<pre class="r"><code>summary(series)</code></pre>
+<pre><code>## # A tibble: 5 × 3
+##   label     count   prop
+##   &lt;chr&gt;     &lt;int&gt;  &lt;dbl&gt;
+## 1 Cropland    501 0.433 
+## 2 Forest      416 0.359 
+## 3 Grassland   129 0.111 
+## 4 Urban        68 0.0587
+## 5 Water        44 0.0380</code></pre>
+<pre class="r"><code>dea_gm_cube$file_info</code></pre>
+<pre><code>## [[1]]
+## # A tibble: 14 × 14
+##    fid       date       band   xres  yres   xmin   ymin   xmax  ymax nrows ncols
+##    &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 02ac1902… 2021-01-01 B02      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+##  2 02ac1902… 2021-01-01 B03      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+##  3 02ac1902… 2021-01-01 B04      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+##  4 02ac1902… 2021-01-01 B05      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+##  5 02ac1902… 2021-01-01 B06      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+##  6 02ac1902… 2021-01-01 B07      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+##  7 02ac1902… 2021-01-01 SMAD     30    30 3.46e6 -96000 3.55e6     0  3200  3200
+##  8 9eade28f… 2022-01-01 B02      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+##  9 9eade28f… 2022-01-01 B03      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+## 10 9eade28f… 2022-01-01 B04      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+## 11 9eade28f… 2022-01-01 B05      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+## 12 9eade28f… 2022-01-01 B06      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+## 13 9eade28f… 2022-01-01 B07      30    30 3.46e6 -96000 3.55e6     0  3200  3200
+## 14 9eade28f… 2022-01-01 SMAD     30    30 3.46e6 -96000 3.55e6     0  3200  3200
+## # ℹ 3 more variables: crs &lt;chr&gt;, path &lt;chr&gt;, cloud_cover &lt;dbl&gt;
+## 
+## [[2]]
+## # A tibble: 14 × 14
+##    fid     date       band   xres  yres   xmin    ymin   xmax   ymax nrows ncols
+##    &lt;chr&gt;   &lt;date&gt;     &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 0b46f5… 2021-01-01 B02      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+##  2 0b46f5… 2021-01-01 B03      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+##  3 0b46f5… 2021-01-01 B04      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+##  4 0b46f5… 2021-01-01 B05      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+##  5 0b46f5… 2021-01-01 B06      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+##  6 0b46f5… 2021-01-01 B07      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+##  7 0b46f5… 2021-01-01 SMAD     30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+##  8 b64487… 2022-01-01 B02      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+##  9 b64487… 2022-01-01 B03      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+## 10 b64487… 2022-01-01 B04      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+## 11 b64487… 2022-01-01 B05      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+## 12 b64487… 2022-01-01 B06      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+## 13 b64487… 2022-01-01 B07      30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+## 14 b64487… 2022-01-01 SMAD     30    30 3.55e6 -192000 3.65e6 -96000  3200  3200
+## # ℹ 3 more variables: crs &lt;chr&gt;, path &lt;chr&gt;, cloud_cover &lt;dbl&gt;
+## 
+## [[3]]
+## # A tibble: 14 × 14
+##    fid       date       band   xres  yres   xmin   ymin   xmax  ymax nrows ncols
+##    &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 494ba329… 2021-01-01 B02      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+##  2 494ba329… 2021-01-01 B03      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+##  3 494ba329… 2021-01-01 B04      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+##  4 494ba329… 2021-01-01 B05      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+##  5 494ba329… 2021-01-01 B06      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+##  6 494ba329… 2021-01-01 B07      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+##  7 494ba329… 2021-01-01 SMAD     30    30 3.55e6 -96000 3.65e6     0  3200  3200
+##  8 2a0a1a9d… 2022-01-01 B02      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+##  9 2a0a1a9d… 2022-01-01 B03      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+## 10 2a0a1a9d… 2022-01-01 B04      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+## 11 2a0a1a9d… 2022-01-01 B05      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+## 12 2a0a1a9d… 2022-01-01 B06      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+## 13 2a0a1a9d… 2022-01-01 B07      30    30 3.55e6 -96000 3.65e6     0  3200  3200
+## 14 2a0a1a9d… 2022-01-01 SMAD     30    30 3.55e6 -96000 3.65e6     0  3200  3200
+## # ℹ 3 more variables: crs &lt;chr&gt;, path &lt;chr&gt;, cloud_cover &lt;dbl&gt;
+## 
+## [[4]]
+## # A tibble: 14 × 14
+##    fid     date       band   xres  yres   xmin    ymin   xmax   ymax nrows ncols
+##    &lt;chr&gt;   &lt;date&gt;     &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 829ce8… 2021-01-01 B02      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+##  2 829ce8… 2021-01-01 B03      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+##  3 829ce8… 2021-01-01 B04      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+##  4 829ce8… 2021-01-01 B05      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+##  5 829ce8… 2021-01-01 B06      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+##  6 829ce8… 2021-01-01 B07      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+##  7 829ce8… 2021-01-01 SMAD     30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+##  8 50782b… 2022-01-01 B02      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+##  9 50782b… 2022-01-01 B03      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+## 10 50782b… 2022-01-01 B04      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+## 11 50782b… 2022-01-01 B05      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+## 12 50782b… 2022-01-01 B06      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+## 13 50782b… 2022-01-01 B07      30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+## 14 50782b… 2022-01-01 SMAD     30    30 3.46e6 -192000 3.55e6 -96000  3200  3200
+## # ℹ 3 more variables: crs &lt;chr&gt;, path &lt;chr&gt;, cloud_cover &lt;dbl&gt;</code></pre>
+<pre class="r"><code>series %&gt;% 
+  sits_apply(NDVI = (B05 - B04) / (B05 + B04))  %&gt;% 
+  sits_apply(EVI = 2.5 * (B05 - B04) / ((B05 + 6.0 * B04 - 7.5 * B02) + 1.0))  %&gt;% 
+  sits_select(bands = c(&quot;NDVI&quot;, &quot;EVI&quot;))</code></pre>
+<pre><code>## # A tibble: 1,158 × 7
+##    longitude latitude start_date end_date   label     cube           time_series
+##        &lt;dbl&gt;    &lt;dbl&gt; &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;     &lt;chr&gt;          &lt;list&gt;     
+##  1      36.7   -0.639 2021-01-01 2022-01-01 Grassland GM-LS8-LS9-AN… &lt;tibble&gt;   
+##  2      36.7   -0.638 2021-01-01 2022-01-01 Grassland GM-LS8-LS9-AN… &lt;tibble&gt;   
+##  3      36.7   -0.644 2021-01-01 2022-01-01 Grassland GM-LS8-LS9-AN… &lt;tibble&gt;   
+##  4      36.7   -0.644 2021-01-01 2022-01-01 Grassland GM-LS8-LS9-AN… &lt;tibble&gt;   
+##  5      36.7   -0.642 2021-01-01 2022-01-01 Grassland GM-LS8-LS9-AN… &lt;tibble&gt;   
+##  6      36.7   -0.673 2021-01-01 2022-01-01 Forest    GM-LS8-LS9-AN… &lt;tibble&gt;   
+##  7      36.7   -0.636 2021-01-01 2022-01-01 Grassland GM-LS8-LS9-AN… &lt;tibble&gt;   
+##  8      36.7   -0.636 2021-01-01 2022-01-01 Water     GM-LS8-LS9-AN… &lt;tibble&gt;   
+##  9      36.7   -0.636 2021-01-01 2022-01-01 Water     GM-LS8-LS9-AN… &lt;tibble&gt;   
+## 10      36.7   -0.635 2021-01-01 2022-01-01 Water     GM-LS8-LS9-AN… &lt;tibble&gt;   
+## # ℹ 1,148 more rows</code></pre>
+<pre class="r"><code>set.seed(20)
 
-bbox &lt;- c(36.74, -0.53, 37.43, -1.14)
+rfor_model &lt;- sits_train(
+  series,
+  ml_method = sits_rfor()
+)
+plot(rfor_model)</code></pre>
+<pre><code>## Registered S3 method overwritten by &#39;GGally&#39;:
+##   method from   
+##   +.gg   ggplot2</code></pre>
+<p><img src="Classification_files/figure-html/modelsetup-1.png" width="672" /></p>
+<pre class="r"><code>muranga_probs &lt;- sits_classify(
+  data = dea_gm_cube,
+  ml_model = rfor_model,
+  output_dir = &quot;data&quot;,
+  version = &quot;rf-raster&quot;,
+  multicores = 4,
+  memsize = 16
+)</code></pre>
+<pre><code>## recovery mode: data already exists. To produce new data, change output_dir or version
+## recovery mode: data already exists. To produce new data, change output_dir or version
+## recovery mode: data already exists. To produce new data, change output_dir or version
+## recovery mode: data already exists. To produce new data, change output_dir or version</code></pre>
+<pre class="r"><code>plot(muranga_probs, labels = &quot;Forest&quot;, palette = &quot;YlGn&quot;)</code></pre>
+<p><img src="Classification_files/figure-html/randfor-1.png" width="672" />
+## Classified Map</p>
+<pre class="r"><code>muranga_smooth &lt;- sits_smooth(
+  cube = muranga_probs,
+  multicores = 4,
+  memsize = 12,
+  output_dir = &quot;data&quot;,
+  version = &quot;rf-raster&quot;
+)</code></pre>
+<pre><code>## recovery mode: data already exists. To produce new data, change output_dir or version
+## recovery mode: data already exists. To produce new data, change output_dir or version
+## recovery mode: data already exists. To produce new data, change output_dir or version
+## recovery mode: data already exists. To produce new data, change output_dir or version</code></pre>
+<pre class="r"><code>muranga_class &lt;- sits_label_classification(
+  cube = muranga_smooth,
+  multicores = 4,
+  memsize = 12,
+  output_dir = &quot;data&quot;,
+  version = &quot;rf-raster&quot;
+)</code></pre>
+<pre><code>## recovery mode: data already exists. To produce new data, change output_dir or version
+## recovery mode: data already exists. To produce new data, change output_dir or version
+## recovery mode: data already exists. To produce new data, change output_dir or version
+## recovery mode: data already exists. To produce new data, change output_dir or version</code></pre>
+<pre class="r"><code># Plot the thematic map
+plot(muranga_class, tile=muranga_class$tile[2])</code></pre>
+<pre><code>## Warning in .colors_get(labels = labels, legend = legend, palette = palette, :
+## missing colors for labelsUrban</code></pre>
+<pre><code>## Warning in .colors_get(labels = labels, legend = legend, palette = palette, :
+## palette for missing colors isSpectral</code></pre>
+<p><img src="Classification_files/figure-html/class%20map-1.png" width="672" />
+## Create mosaic of classified classes</p>
+<pre class="r"><code>#muranga_mosaic &lt;- sits_mosaic(
+#  roi = st_transform(st_union(kenya_muranga), &quot;EPSG:6933&quot;),
+#  crs = &quot;EPSG:6933&quot;,
+#  cube = muranga_class,
+#  multicores = 2,
+#  output_dir = &quot;data&quot;,
+#  version = &quot;rf-raster&quot;
+#)
 
-url &lt;- stac(&quot;https://explorer.digitalearth.africa/stac&quot;) %&gt;%
-  stac_search(collections = &quot;gm_ls8_ls9_annual&quot;,
-              bbox = bbox, datetime = &quot;2021-01-01/2021-12-31&quot;, limit=40) %&gt;%
-  get_request() %&gt;% assets_select(asset_names=
-  c(&quot;SR_B2&quot;,&quot;SR_B3&quot;, &quot;SR_B4&quot;, &quot;SR_B5&quot;, &quot;SR_B6&quot;, &quot;SR_B7&quot;, &quot;SMAD&quot;)) %&gt;%
-  assets_url() 
-url</code></pre>
-<pre><code>##  [1] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y076/2021--P1Y/gm_ls8_ls9_annual_x217y076_2021--P1Y_SMAD.tif&quot; 
-##  [2] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y075/2021--P1Y/gm_ls8_ls9_annual_x218y075_2021--P1Y_SMAD.tif&quot; 
-##  [3] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y076/2021--P1Y/gm_ls8_ls9_annual_x218y076_2021--P1Y_SMAD.tif&quot; 
-##  [4] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y075/2021--P1Y/gm_ls8_ls9_annual_x217y075_2021--P1Y_SMAD.tif&quot; 
-##  [5] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y076/2021--P1Y/gm_ls8_ls9_annual_x217y076_2021--P1Y_SR_B2.tif&quot;
-##  [6] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y075/2021--P1Y/gm_ls8_ls9_annual_x218y075_2021--P1Y_SR_B2.tif&quot;
-##  [7] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y076/2021--P1Y/gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B2.tif&quot;
-##  [8] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y075/2021--P1Y/gm_ls8_ls9_annual_x217y075_2021--P1Y_SR_B2.tif&quot;
-##  [9] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y076/2021--P1Y/gm_ls8_ls9_annual_x217y076_2021--P1Y_SR_B3.tif&quot;
-## [10] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y075/2021--P1Y/gm_ls8_ls9_annual_x218y075_2021--P1Y_SR_B3.tif&quot;
-## [11] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y076/2021--P1Y/gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B3.tif&quot;
-## [12] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y075/2021--P1Y/gm_ls8_ls9_annual_x217y075_2021--P1Y_SR_B3.tif&quot;
-## [13] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y076/2021--P1Y/gm_ls8_ls9_annual_x217y076_2021--P1Y_SR_B4.tif&quot;
-## [14] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y075/2021--P1Y/gm_ls8_ls9_annual_x218y075_2021--P1Y_SR_B4.tif&quot;
-## [15] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y076/2021--P1Y/gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B4.tif&quot;
-## [16] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y075/2021--P1Y/gm_ls8_ls9_annual_x217y075_2021--P1Y_SR_B4.tif&quot;
-## [17] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y076/2021--P1Y/gm_ls8_ls9_annual_x217y076_2021--P1Y_SR_B5.tif&quot;
-## [18] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y075/2021--P1Y/gm_ls8_ls9_annual_x218y075_2021--P1Y_SR_B5.tif&quot;
-## [19] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y076/2021--P1Y/gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B5.tif&quot;
-## [20] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y075/2021--P1Y/gm_ls8_ls9_annual_x217y075_2021--P1Y_SR_B5.tif&quot;
-## [21] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y076/2021--P1Y/gm_ls8_ls9_annual_x217y076_2021--P1Y_SR_B6.tif&quot;
-## [22] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y075/2021--P1Y/gm_ls8_ls9_annual_x218y075_2021--P1Y_SR_B6.tif&quot;
-## [23] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y076/2021--P1Y/gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B6.tif&quot;
-## [24] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y075/2021--P1Y/gm_ls8_ls9_annual_x217y075_2021--P1Y_SR_B6.tif&quot;
-## [25] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y076/2021--P1Y/gm_ls8_ls9_annual_x217y076_2021--P1Y_SR_B7.tif&quot;
-## [26] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y075/2021--P1Y/gm_ls8_ls9_annual_x218y075_2021--P1Y_SR_B7.tif&quot;
-## [27] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x218/y076/2021--P1Y/gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B7.tif&quot;
-## [28] &quot;s3://deafrica-services/gm_ls8_ls9_annual/1-0-0/x217/y075/2021--P1Y/gm_ls8_ls9_annual_x217y075_2021--P1Y_SR_B7.tif&quot;</code></pre>
-<p>We will start with just one tile, selected below.</p>
-<pre class="r"><code>url &lt;- url[grepl(&quot;y076&quot;, url) &amp; grepl(&quot;x218&quot;, url)]
-
-https &lt;- &quot;https://deafrica-services.s3.af-south-1.amazonaws.com&quot;
-url &lt;- paste0(https, gsub( &quot;s3://deafrica-services&quot;, &quot;&quot;, url))</code></pre>
-<p>We will rename the bands to make them more accessible.</p>
-<pre class="r"><code>stack &lt;- rast(url)
-names(stack)</code></pre>
-<pre><code>## [1] &quot;gm_ls8_ls9_annual_x218y076_2021--P1Y_SMAD&quot; 
-## [2] &quot;gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B2&quot;
-## [3] &quot;gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B3&quot;
-## [4] &quot;gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B4&quot;
-## [5] &quot;gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B5&quot;
-## [6] &quot;gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B6&quot;
-## [7] &quot;gm_ls8_ls9_annual_x218y076_2021--P1Y_SR_B7&quot;</code></pre>
-<pre class="r"><code>names(stack) &lt;- c(&#39;SMAD&#39;, &#39;B2&#39;, &#39;B3&#39;, &#39;B4&#39;, &#39;B5&#39;, &#39;B6&#39;, &#39;B7&#39;)</code></pre>
-<p>Plot the RGB true-colour image of the geomedian.</p>
-<pre class="r"><code>plotRGB(stack, r= &quot;B4&quot;, b = &quot;B2&quot;, g = &quot;B3&quot;, scale=8000, stretch= &#39;lin&#39;)</code></pre>
-<p><img src="Classification_files/figure-html/rgb-1.png" width="672" /></p>
+#plot(muranga_mosaic, legend_position = &quot;inside&quot;)</code></pre>
 </div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
-<p>We can see that DE Africa’s unique geomedian is accessible in R.</p>
+<p>We can see that DE Africa’s unique geomedian is accessible for
+classification in R.</p>
 </div>
 
 

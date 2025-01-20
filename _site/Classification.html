@@ -536,16 +536,22 @@ plot(muranga_class, tile=muranga_class$tile[2])</code></pre>
 ## palette for missing colors isSpectral</code></pre>
 <p><img src="Classification_files/figure-html/class%20map-1.png" width="672" />
 ## Create mosaic of classified classes</p>
-<pre class="r"><code>#muranga_mosaic &lt;- sits_mosaic(
-#  roi = st_transform(st_union(kenya_muranga), &quot;EPSG:6933&quot;),
-#  crs = &quot;EPSG:6933&quot;,
-#  cube = muranga_class,
-#  multicores = 2,
-#  output_dir = &quot;data&quot;,
-#  version = &quot;rf-raster&quot;
-#)
-
-#plot(muranga_mosaic, legend_position = &quot;inside&quot;)</code></pre>
+<pre class="r"><code>muranga_mosaic &lt;- sits_mosaic(
+  roi = st_transform(st_union(kenya_muranga), &quot;EPSG:6933&quot;),
+  crs = &quot;EPSG:6933&quot;,
+  cube = muranga_class,
+  multicores = 2,
+  output_dir = &quot;data&quot;,
+  version = &quot;rf-raster&quot;
+)</code></pre>
+<pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |==================                                                    |  25%  |                                                                              |===================================                                   |  50%  |                                                                              |====================================================                  |  75%  |                                                                              |======================================================================| 100%
+##   |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%</code></pre>
+<pre class="r"><code>plot(muranga_mosaic, legend_position = &quot;inside&quot;)</code></pre>
+<pre><code>## Warning in .colors_get(labels = labels, legend = legend, palette = palette, :
+## missing colors for labelsUrban</code></pre>
+<pre><code>## Warning in .colors_get(labels = labels, legend = legend, palette = palette, :
+## palette for missing colors isSpectral</code></pre>
+<p><img src="Classification_files/figure-html/mosaic-1.png" width="672" /></p>
 </div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>

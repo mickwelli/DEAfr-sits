@@ -15,7 +15,7 @@
 
 <title>Loading Digital Earth Africa data</title>
 
-<script src="site_libs/header-attrs-2.26/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -320,6 +320,8 @@ object is a `sits cube’ which can be queried and plotted, as below.</p>
 )</code></pre>
 <pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%</code></pre>
 <pre class="r"><code>plot(dea_s2_cube, red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B08&quot;)</code></pre>
+<pre><code>## Warning: [minmax] min and max values not available for all layers. See
+## &#39;setMinMax&#39; or &#39;global&#39;</code></pre>
 <p><img src="Loading_files/figure-html/s2cube-1.png" width="672" /> ##
 Loading with rstac</p>
 <p>We can also load Digital Earth Africa directly through STAC metadata
@@ -365,57 +367,92 @@ Explorer.</p>
 <pre><code>## DEAFRICA:
 ## - ALOS-PALSAR-MOSAIC (PALSAR/ALOS)
 ## - grid system: 
+## - period: 2007 to 2022
 ## - bands: HH HV CLOUD
 ## - opendata collection 
 ## 
 ## - DEM-COP-30 (COP-DEM/30)
 ## - grid system: 
+## - period: 2019
 ## - bands: ELEVATION
 ## - opendata collection 
 ## 
 ## - LS5-SR (LANDSAT-5/TM-MSS)
 ## - grid system: WRS-2
+## - period: 1984 to 2011
 ## - bands: B01 B02 B03 B04 B05 B07 CLOUD
 ## - opendata collection 
 ## 
 ## - LS7-SR (LANDSAT-7/ETM)
 ## - grid system: WRS-2
+## - period: 1999 to 2024
 ## - bands: B01 B02 B03 B04 B05 B07 CLOUD
 ## - opendata collection 
 ## 
 ## - LS8-SR (LANDSAT-8/OLI)
 ## - grid system: WRS-2
+## - period: 2013 to 2024
 ## - bands: B01 B02 B03 B04 B05 B06 B07 CLOUD
 ## - opendata collection 
 ## 
 ## - LS9-SR (LANDSAT-9/OLI)
 ## - grid system: WRS-2
+## - period: 2021 to 2024
 ## - bands: B01 B02 B03 B04 B05 B06 B07 CLOUD
 ## - opendata collection 
 ## 
 ## - NDVI-ANOMALY (LANDSAT-SENTINEL/OLI-MSI)
 ## - grid system: 
+## - period: 2017 to 2024
 ## - bands: NDVI-MEAN NDVI-STD-ANOMALY
 ## - opendata collection 
 ## 
 ## - RAINFALL-CHIRPS-DAILY (CHIRPS/CHIRPS)
 ## - grid system: 
+## - period: 1981 to 2024
 ## - bands: RAINFALL
 ## - opendata collection 
 ## 
 ## - RAINFALL-CHIRPS-MONTHLY (CHIRPS/CHIRPS)
 ## - grid system: 
+## - period: 1981 to 2024
 ## - bands: RAINFALL
 ## - opendata collection 
 ## 
 ## - SENTINEL-1-RTC (SENTINEL-1/RTC)
 ## - grid system: MGRS
+## - period: 2018 to 2024
 ## - bands: VV VH
 ## - opendata collection 
 ## 
 ## - SENTINEL-2-L2A (SENTINEL-2/MSI)
 ## - grid system: MGRS
+## - period: 2016 to 2024
 ## - bands: B01 B02 B03 B04 B05 B06 B07 B08 B8A B09 B11 B12 CLOUD
+## - opendata collection 
+## 
+## - GM-LS8-LS9-ANNUAL (LANDSAT/OLI)
+## - grid system: WRS-2
+## - period: 2021 to 2022
+## - bands: B02 B03 B04 B05 B06 B07 EMAD SMAD BCMAD
+## - opendata collection 
+## 
+## - GM-S2-ANNUAL (SENTINEL-2/MSI)
+## - grid system: MGRS
+## - period: 2017 to 2022
+## - bands: B02 B03 B04 B05 B06 B07 B08 B11 B12 B8A EMAD SMAD BCMAD
+## - opendata collection 
+## 
+## - GM-S2-ROLLING (SENTINEL-2/MSI)
+## - grid system: MGRS
+## - period: 2019 to 2023
+## - bands: B02 B03 B04 B05 B06 B07 B08 B11 B12 B8A EMAD SMAD BCMAD
+## - opendata collection 
+## 
+## - GM-S2-SEMIANNUAL (SENTINEL-2/MSI)
+## - grid system: MGRS
+## - period: 2017 to 2022
+## - bands: B02 B03 B04 B05 B06 B07 B08 B11 B12 B8A EMAD SMAD BCMAD
 ## - opendata collection</code></pre>
 <pre class="r"><code>dea_ls8_cube &lt;- sits_cube(
   source = &quot;DEAFRICA&quot;,
@@ -432,6 +469,8 @@ Explorer.</p>
 )</code></pre>
 <pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%</code></pre>
 <pre class="r"><code>plot(dea_ls8_cube, red = &quot;B04&quot;, blue = &quot;B02&quot;, green = &quot;B05&quot;)</code></pre>
+<pre><code>## Warning: [minmax] min and max values not available for all layers. See
+## &#39;setMinMax&#39; or &#39;global&#39;</code></pre>
 <p><img src="Loading_files/figure-html/ls8cube-1.png" width="672" /></p>
 </div>
 
